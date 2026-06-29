@@ -1,25 +1,27 @@
-# Chrome to Firefox Extension Converter - Web UI
+# chrome2moz — Web UI
 
-A WebAssembly-powered web interface for converting Chrome MV3 extensions to Firefox-compatible format.
+A WebAssembly-powered web interface for converting Chrome MV3 extensions to Firefox-compatible format. Features a distinctive amber/forge-inspired dark theme with refined typography and atmospheric design.
 
 ## Features
 
 - **Drag & Drop Upload**: Simply drag your Chrome extension ZIP file onto the interface
 - **Real-time Analysis**: Get instant feedback on compatibility issues before conversion
 - **One-Click Conversion**: Convert your extension with a single click
-- **Detailed Reports**: View comprehensive analysis of incompatibilities and fixes
+- **Detailed Reports**: View comprehensive analysis of incompatibilities and fixes grouped by category
+- **Keyboard Shortcut Conflicts**: Detect and resolve conflicts with 60+ Firefox shortcuts
 - **Instant Download**: Download the converted Firefox extension immediately
+- **Distinctive Design**: Warm amber aesthetic, noise texture, ember glow atmosphere, and DM Serif Display typography
 
 ## Building the Web UI
 
 ### Prerequisites
 
-1. **Rust and Cargo** (if not already installed):
+1. **Rust and Cargo**:
    ```bash
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
    ```
 
-2. **wasm-pack** (WebAssembly build tool):
+2. **wasm-pack**:
    ```bash
    curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
    ```
@@ -38,18 +40,18 @@ A WebAssembly-powered web interface for converting Chrome MV3 extensions to Fire
 
 2. Serve the web application:
 
-   **Option 1 - Python (recommended for quick testing):**
+   **Option 1 — Python:**
    ```bash
    cd web
    python3 -m http.server 8080
    ```
 
-   **Option 2 - Node.js:**
+   **Option 2 — Node.js:**
    ```bash
    npx http-server web -p 8080 -c-1
    ```
 
-   **Option 3 - Rust miniserve:**
+   **Option 3 — Rust miniserve:**
    ```bash
    cargo install miniserve
    miniserve web -p 8080
@@ -59,15 +61,16 @@ A WebAssembly-powered web interface for converting Chrome MV3 extensions to Fire
 
 ## Usage
 
-1. **Upload Extension**: Click "Choose File" or drag & drop your Chrome extension ZIP file
-2. **Review Analysis**: Check the compatibility analysis results
-3. **Convert**: Click "Convert Extension" to transform it for Firefox
-4. **Download**: Download the converted `.xpi` file
-5. **Test in Firefox**:
+1. **Upload Extension**: Click or drag & drop your Chrome extension ZIP file
+2. **Review Analysis**: Check the compatibility analysis results with collapsible sections
+3. **Resolve Shortcuts**: Optionally choose alternative keyboard shortcuts for Firefox
+4. **Convert**: Click "Convert Extension" to transform it for Firefox
+5. **Download**: Download the converted `.xpi` or `.zip` file
+6. **Test in Firefox**:
    - Open Firefox
    - Go to `about:debugging#/runtime/this-firefox`
    - Click "Load Temporary Add-on"
-   - Select the downloaded `.xpi` file
+   - Select the downloaded file
 
 ## Technical Details
 
@@ -78,32 +81,37 @@ The web UI consists of three main components:
 1. **WebAssembly Module** (`src/wasm.rs`):
    - Rust code compiled to WASM
    - Handles all conversion logic
-   - Provides two main functions:
-     - `analyze_extension_zip()`: Analyzes compatibility
-     - `convert_extension_zip()`: Performs conversion
+   - Provides: `analyze_extension_zip()`, `convert_extension_zip()`, `analyze_keyboard_shortcuts()`
 
 2. **Frontend UI** (`web/`):
-   - `index.html`: Main HTML structure
-   - `styles.css`: Responsive styling
-   - `app.js`: JavaScript logic and WASM interface
+   - `index.html`: Semantic HTML5 structure with ARIA support
+   - `styles.css`: Responsive amber-themed design with noise texture and ember glow
+   - `app.js`: JavaScript logic, WASM interface, collapsible sections, shortcut selectors
 
 3. **Build System**:
-   - `build-wasm.sh`: Compilation script
-   - `wasm-pack`: Build tool for WebAssembly
+   - `build-wasm.sh`: Defensive Bash script with `set -Eeuo pipefail`, trap cleanup, structured logging
 
 ### File Structure
 
 ```
 web/
 ├── README.md          # This file
-├── index.html         # Main HTML page
-├── styles.css         # Styling
-├── app.js            # Frontend JavaScript
+├── index.html         # Main HTML page (DM Serif Display + Inter fonts)
+├── styles.css         # Amber/forge dark theme with noise & gradient overlays
+├── app.js            # Frontend JavaScript (WASM bridge, collapsible UI)
 └── pkg/              # Generated WASM files (after build)
     ├── chrome2moz.js
     ├── chrome2moz_bg.wasm
     └── ...
 ```
+
+## Design
+
+The interface uses a **forge/ember** aesthetic:
+- **Colors**: Warm amber accents (`#f59e0b`, `#d97706`) against deep charcoal (`#0c0a09`)
+- **Typography**: DM Serif Display for headings, Inter for body text
+- **Atmosphere**: Noise texture overlay, radial gradient glows, subtle border gradients
+- **Motion**: Smooth cubic-bezier transitions, glow effects on hover, rotating logo mark
 
 ## Browser Compatibility
 
@@ -124,13 +132,19 @@ If you modify the Rust code, rebuild the WASM module:
 ./build-wasm.sh
 ```
 
-Then refresh your browser (you may need to do a hard refresh: Ctrl+Shift+R or Cmd+Shift+R).
+Then refresh your browser (hard refresh: Ctrl+Shift+R or Cmd+Shift+R).
 
 ### Debugging
 
 1. **Browser Console**: Check for JavaScript errors or WASM loading issues
 2. **Network Tab**: Verify that WASM files are loading correctly
 3. **Rust Panics**: Will appear in the browser console (thanks to `console_error_panic_hook`)
+
+### Code Quality
+
+```bash
+cargo fmt && cargo clippy --all-targets --all-features && cargo test
+```
 
 ## Deployment
 
@@ -148,16 +162,16 @@ To deploy the web UI to a static hosting service:
    - Cloudflare Pages
    - Any static hosting service
 
-3. Ensure the server is configured to serve `.wasm` files with the correct MIME type:
+3. Ensure the server serves `.wasm` files with the correct MIME type:
    ```
    application/wasm
    ```
 
 ## Limitations
 
-- Maximum file size depends on browser memory limits (typically 100-200MB)
+- Maximum file size depends on browser memory limits (typically 100–200 MB)
 - Processing happens client-side, so complex extensions may take longer
-- No server-side storage - all data stays in your browser
+- No server-side storage — all data stays in your browser
 
 ## Troubleshooting
 
@@ -187,8 +201,9 @@ Contributions are welcome! To work on the web UI:
 1. Make changes to `web/*.html/css/js` or `src/wasm.rs`
 2. Rebuild: `./build-wasm.sh`
 3. Test locally using a local web server
-4. Submit a pull request
+4. Run quality checks: `cargo clippy && cargo test`
+5. Submit a pull request
 
 ## License
 
-MIT License - See main project LICENSE file
+MIT License — See main project LICENSE file

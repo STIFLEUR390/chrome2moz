@@ -55,7 +55,7 @@ pub fn generate_markdown_report(result: &ConversionResult) -> Result<String> {
         for change in &result.report.manifest_changes {
             report.push_str(&format!("- {}\n", change));
         }
-        report.push_str("\n");
+        report.push('\n');
     }
     
     // JavaScript Changes Summary
@@ -64,7 +64,7 @@ pub fn generate_markdown_report(result: &ConversionResult) -> Result<String> {
         for change in &result.report.javascript_changes {
             report.push_str(&format!("- {}\n", change));
         }
-        report.push_str("\n");
+        report.push('\n');
     }
     
     // Blockers
@@ -73,7 +73,7 @@ pub fn generate_markdown_report(result: &ConversionResult) -> Result<String> {
         for blocker in &result.report.blockers {
             report.push_str(&format!("- {}\n", blocker));
         }
-        report.push_str("\n");
+        report.push('\n');
     }
     
     // Manual Actions
@@ -82,7 +82,7 @@ pub fn generate_markdown_report(result: &ConversionResult) -> Result<String> {
         for action in &result.report.manual_actions {
             report.push_str(&format!("- {}\n", action));
         }
-        report.push_str("\n");
+        report.push('\n');
     }
     
     // Warnings with detailed explanations
@@ -90,7 +90,7 @@ pub fn generate_markdown_report(result: &ConversionResult) -> Result<String> {
         report.push_str("## ℹ️ Warnings & What They Mean\n\n");
         for warning in &result.report.warnings {
             report.push_str(&format!("- {}\n", warning));
-            
+
             // Add detailed explanations for common warnings
             if warning.contains("service worker") {
                 report.push_str("\n### Service Worker → Event Page Conversion\n\n");

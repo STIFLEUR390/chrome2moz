@@ -17,14 +17,15 @@ use std::sync::OnceLock;
 
 /// Simple pass-through transformer (no AST parsing needed!)
 pub struct JavaScriptTransformer {
-    _decisions: Vec<SelectedDecision>,
+    #[allow(dead_code)]
+    decisions: Vec<SelectedDecision>,
 }
 
 impl JavaScriptTransformer {
     /// Create a new pass-through transformer
     pub fn new(decisions: &[SelectedDecision]) -> Self {
         Self {
-            _decisions: decisions.to_vec(),
+            decisions: decisions.to_vec(),
         }
     }
     

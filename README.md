@@ -26,7 +26,9 @@ Firefox natively supports `chrome.*` APIs, but some Chrome-only APIs don't exist
 - **Manifest Transformation**: Handles MV3 manifest differences for Firefox
 - **Keyboard Shortcut Checker**: Detects conflicts with 60+ Firefox shortcuts
 - **Multiple Formats**: Supports `.crx`, `.zip`, or unpacked directories
-- **Web Interface**: Browser-based UI (no installation required)
+- **Web Interface**: Browser-based UI with drag & drop (no installation required)
+- **Robust Build**: Defensive Bash scripting, Rust best practices, and clean Clippy compliance
+- **Forged Design**: Warm amber/ember aesthetic with noise texture, refined typography (DM Serif Display + Inter)
 
 ## Quick Start
 
@@ -83,6 +85,7 @@ cargo build --release
 - See [docs/FIREFOX_SELF_UNINSTALL_FIX.md](./docs/FIREFOX_SELF_UNINSTALL_FIX.md) for details
 
 ## API Coverage
+
 **[View Full API Status →](./CHROME_ONLY_API_IMPLEMENTATION_STATUS.md)**
 
 ## Testing in Firefox
@@ -93,10 +96,23 @@ cargo build --release
 
 Check Browser Console (Ctrl+Shift+J) for any errors.
 
+## Project Quality
+
+This project follows four quality standards audited by AI skills:
+
+| Skill | What it covers |
+|---|---|
+| **Rust Best Practices** | Idiomatic Rust, `thiserror` error types, no unwrap in production, Clippy-clean |
+| **Bash Defensive Patterns** | `set -Eeuo pipefail`, trap cleanup, structured logging, quoted variables |
+| **Frontend Design** | Distinctive amber/forge aesthetic, DM Serif Display typography, noise texture, ember glow atmosphere |
+| **Web Accessibility** * | WCAG 2.2 compliance, semantic HTML, ARIA labels, keyboard navigation |
+
+\* Accessibility audit & SEO optimizations available in the skills directory.
+
 ## Important Notes
 
-- **Firefox supports `chrome.*` namespace** natively - no need to rewrite to `browser.*`
-- **Static analysis has limits** - runtime behavior differences need manual testing
+- **Firefox supports `chrome.*` namespace** natively — no need to rewrite to `browser.*`
+- **Static analysis has limits** — runtime behavior differences need manual testing
 - **~90% of conversions work** automatically; remaining 10% may need manual adjustments
 - See [ARCHITECTURE.md](./ARCHITECTURE.md) for what's detected vs. what requires testing
 
@@ -105,7 +121,7 @@ Check Browser Console (Ctrl+Shift+J) for any errors.
 Contributions welcome! See [ARCHITECTURE.md](./ARCHITECTURE.md) for architectural details.
 
 ```bash
-cargo fmt && cargo clippy && cargo test
+cargo fmt && cargo clippy --all-targets --all-features && cargo test
 ```
 
 ## Resources
@@ -117,4 +133,4 @@ cargo fmt && cargo clippy && cargo test
 
 ## License
 
-MIT License - See LICENSE file for details.
+MIT License — See LICENSE file for details.

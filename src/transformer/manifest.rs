@@ -181,10 +181,7 @@ impl ManifestTransformer {
     
     fn transform_permissions(&self, manifest: &mut Manifest) {
         // Remove invalid permissions for Firefox
-        let invalid_permissions = vec![
-            "commands",   // "commands" is not a permission, it's a manifest key
-            "offscreen",  // Chrome-only permission for offscreen documents
-        ];
+        let invalid_permissions = ["commands", "offscreen"];
         
         // Separate API permissions from host permissions
         let permissions = manifest.permissions.clone();

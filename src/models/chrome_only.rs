@@ -233,25 +233,13 @@ pub enum ManifestChange {
     RemovePermission(String),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ChromeOnlyConversionResult {
     pub new_files: Vec<NewFile>,
     pub modified_files: Vec<ModifiedFile>,
     pub manifest_changes: Vec<ManifestChange>,
     pub removed_files: Vec<PathBuf>,
     pub instructions: Vec<String>,
-}
-
-impl Default for ChromeOnlyConversionResult {
-    fn default() -> Self {
-        Self {
-            new_files: Vec::new(),
-            modified_files: Vec::new(),
-            manifest_changes: Vec::new(),
-            removed_files: Vec::new(),
-            instructions: Vec::new(),
-        }
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -7,4 +7,5 @@ use anyhow::Result;
 
 pub fn validate_extension(result: &ConversionResult) -> Result<()> {
     structure::validate_structure(result)
+        .map_err(|e| anyhow::anyhow!(e))
 }

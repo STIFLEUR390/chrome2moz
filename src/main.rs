@@ -63,7 +63,7 @@ fn main() {
         Some(cmd) => cmd,
         None => {
             if let Err(e) = run_interactive_mode() {
-                eprintln!("{}", format!("Interactive mode error: {}", e).red());
+                eprintln!("{}", format!("Interactive mode error: {e}").red());
                 std::process::exit(1);
             }
             return;
@@ -93,7 +93,9 @@ fn main() {
                     println!("  - Output: {}", output.display());
                     
                     if report {
-                        let report_stem = output.file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_else(|| "conversion".to_string());
+                        let report_stem = output.file_stem()
+                            .map(|s| s.to_string_lossy().to_string())
+                            .unwrap_or_else(|| "conversion".to_string());
                         let report_path = output.with_file_name(format!("{}_report.md", report_stem));
                         if let Ok(report_content) = chrome2moz::report::generate_report(&result) {
                             if std::fs::write(&report_path, report_content).is_ok() {
@@ -120,7 +122,7 @@ fn main() {
                 }
                 Err(e) => {
                     eprintln!("{}", "❌ Conversion failed!".red().bold());
-                    eprintln!("{}", format!("Error: {}", e).red());
+                    eprintln!("{}", format!("Error: {e}").red());
                     std::process::exit(1);
                 }
             }
@@ -148,7 +150,7 @@ fn main() {
                             if context.incompatibilities.is_empty() {
                                 println!("{}", "✅ No incompatibilities found!".green());
                             } else {
-                                println!("{}", format!("Found {} incompatibilities:", 
+                                println!("{}", format!("Found {} incompatibilities:",
                                     context.incompatibilities.len()).yellow());
                                 println!();
                                 
@@ -181,14 +183,14 @@ fn main() {
                         }
                         Err(e) => {
                             eprintln!("{}", "❌ Analysis failed!".red().bold());
-                            eprintln!("{}", format!("Error: {}", e).red());
+                            eprintln!("{}", format!("Error: {e}").red());
                             std::process::exit(1);
                         }
                     }
                 }
                 Err(e) => {
                     eprintln!("{}", "❌ Failed to load extension!".red().bold());
-                    eprintln!("{}", format!("Error: {}", e).red());
+                    eprintln!("{}", format!("Error: {e}").red());
                     std::process::exit(1);
                 }
             }
@@ -202,7 +204,11 @@ fn main() {
             println!();
 
             let runtime = tokio::runtime::Runtime::new()
-                .expect("failed to initialize async runtime");
+                .unwrap_or_else(|e| {
+                    eprintln!("{}", "❌ Failed to initialize async runtime".red().bold());
+                    eprintln!("{}", format!("Error: {e}").red());
+                    std::process::exit(1);
+                });
 
             if let Err(err) = runtime.block_on(fetch_chrome_only_apis::run()) {
                 eprintln!("{}", "❌ Failed to fetch API list".red().bold());
@@ -219,7 +225,11 @@ fn main() {
             println!();
 
             let runtime = tokio::runtime::Runtime::new()
-                .expect("failed to initialize async runtime");
+                .unwrap_or_else(|e| {
+                    eprintln!("{}", "❌ Failed to initialize async runtime".red().bold());
+                    eprintln!("{}", format!("Error: {e}").red());
+                    std::process::exit(1);
+                });
 
             // Pass current directory to check for shortcuts in the project
             let current_dir = std::env::current_dir().ok();

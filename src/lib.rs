@@ -57,8 +57,8 @@ pub fn convert_extension(
     // 6. Package output (extension is now in result.source)
     packager::build_complete_extension(&result.source, &result, output_path)?;
     
-    // 7. Generate report
-    let _report = report::generate_report(&result)?;
+    // 7. Generate report (discard is intentional — report is written during packaging)
+    let _ = report::generate_report(&result)?;
     
     Ok(result)
 }

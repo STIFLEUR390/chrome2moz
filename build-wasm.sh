@@ -1,31 +1,43 @@
 #!/bin/bash
 # Build script for WebAssembly UI
+set -Eeuo pipefail
 
-set -e
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+SCRIPT_NAME="$(basename -- "${BASH_SOURCE[0]}")"
 
-echo "🦊 Building Chrome to Firefox Converter WebAssembly UI"
-echo "======================================================="
-echo ""
+# --- Logging helpers ---
+log_info()  { echo "[$(date +'%Y-%m-%d %H:%M:%S')] INFO:  $*" >&2; }
+log_error() { echo "[$(date +'%Y-%m-%d %H:%M:%S')] ERROR: $*" >&2; }
 
-# Check if wasm-pack is installed
-if ! command -v wasm-pack &> /dev/null; then
-    echo "❌ wasm-pack is not installed!"
-    echo ""
-    echo "Install it with:"
-    echo "  curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh"
-    echo ""
-    exit 1
-fi
+# --- Cleanup ---
+TMPDIR=""
+cleanup() {
+    [[ -n "$TMPDIR" && -d "$TMPDIR" ]] && rm -rf -- "$TMPDIR"
+}
+trap cleanup EXIT
+trap 'log_error "Error on line $LINENO"' ERR
 
-echo "✅ wasm-pack found"
-echo ""
+# --- Main ---
+main() {
+    log_info "🦊 Building Chrome to Firefox Converter WebAssembly UI"
+    log_info "======================================================="
 
-# Build the WASM module
-echo "📦 Building WASM module..."
-wasm-pack build --target web --out-dir web/pkg --no-default-features
+    # Check if wasm-pack is installed
+    if ! command -v wasm-pack &>/dev/null; then
+        log_error "❌ wasm-pack is not installed!"
+        echo ""
+        echo "Install it with:"
+        echo "  curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh"
+        echo ""
+        exit 1
+    fi
+    log_info "✅ wasm-pack found"
 
-if [ $? -eq 0 ]; then
-    echo "✅ WASM module built successfully!"
+    # Build the WASM module
+    log_info "📦 Building WASM module..."
+    wasm-pack build --target web --out-dir web/pkg --no-default-features
+
+    log_info "✅ WASM module built successfully!"
     echo ""
     echo "📁 Output location: ./web/pkg/"
     echo ""
@@ -42,8 +54,6 @@ if [ $? -eq 0 ]; then
     echo "    miniserve web -p 8080"
     echo ""
     echo "Then open: http://localhost:8080"
-    echo ""
-else
-    echo "❌ Build failed!"
-    exit 1
-fi
+}
+
+main "$@"
