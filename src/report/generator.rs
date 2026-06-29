@@ -22,18 +22,20 @@ pub fn generate_markdown_report(result: &ConversionResult) -> Result<String> {
         result.report.summary.chrome_api_calls_converted));
     report.push_str(&format!("- **Callback→Promise Conversions**: {}\n\n",
         result.report.summary.callback_to_promise_conversions));
+    report.push('\n');
     
     // Detailed File Changes
     if !result.modified_files.is_empty() {
         report.push_str("## Modified Files - Detailed Changes\n\n");
         for modified in &result.modified_files {
             report.push_str(&format!("### {}\n\n", modified.path.display()));
-            report.push_str(&format!("**{} changes made**\n\n", modified.changes.len()));
+            report.push_str(&format!("**{} changes made**\n", modified.changes.len()));
+            report.push('\n');
             
             for change in &modified.changes {
                 report.push_str(&format!("- **Line {}**: {}\n", change.line_number, change.description));
             }
-            report.push_str("\n");
+            report.push('\n');
         }
     }
     
@@ -44,7 +46,7 @@ pub fn generate_markdown_report(result: &ConversionResult) -> Result<String> {
             report.push_str(&format!("- **{}**\n", new_file.path.display()));
             report.push_str(&format!("  - Purpose: {}\n", new_file.purpose));
         }
-        report.push_str("\n");
+        report.push('\n');
     }
     
     // Manifest Changes

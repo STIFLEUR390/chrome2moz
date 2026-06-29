@@ -5,18 +5,16 @@ use crate::models::{
     ContentSecurityPolicy, ContentSecurityPolicyV3, WebAccessibleResources,
     SelectedDecision, Extension,
 };
+use crate::utils::helpers::is_match_pattern;
 use anyhow::Result;
 use regex::Regex;
+use std::sync::OnceLock;
 
-pub struct ManifestTransformer {
-    _decisions: Vec<SelectedDecision>,
-}
+pub struct ManifestTransformer;
 
 impl ManifestTransformer {
-    pub fn new(decisions: &[SelectedDecision]) -> Self {
-        Self {
-            _decisions: decisions.to_vec(),
-        }
+    pub fn new(_decisions: &[SelectedDecision]) -> Self {
+        Self
     }
     
     pub fn transform(&self, manifest: &Manifest, source: Option<&Extension>) -> Result<Manifest> {
@@ -135,6 +133,18 @@ impl ManifestTransformer {
         }
     }
     
+    /// Cached regex for importScripts() detection
+    fn import_scripts_re() -> &'static Regex {
+        static RE: OnceLock<Regex> = OnceLock::new();
+        RE.get_or_init(|| Regex::new(r#"(?://\s*)?importScripts\s*\([^)]*\)"#).unwrap())
+    }
+    
+    /// Cached regex for quoted filename extraction
+    fn filename_re() -> &'static Regex {
+        static RE: OnceLock<Regex> = OnceLock::new();
+        RE.get_or_init(|| Regex::new(r#"['"]([^'"]+)['"]"#).unwrap())
+    }
+    
     /// Extract script names from importScripts() calls using regex
     /// This is SAFE - no eval() needed! We parse the calls and add scripts to manifest.
     /// Handles both commented and uncommented importScripts() calls.
@@ -142,9 +152,8 @@ impl ManifestTransformer {
         // Read the script file content
         let content = source?.get_file_content(&std::path::PathBuf::from(script_path))?;
         
-        // Match importScripts() calls, including commented out ones
-        // Pattern: optional // comment, then importScripts(...)
-        let re = Regex::new(r#"(?://\s*)?importScripts\s*\([^)]*\)"#).ok()?;
+        let re = Self::import_scripts_re();
+        let file_re = Self::filename_re();
         
         let mut imported = Vec::new();
         
@@ -153,7 +162,6 @@ impl ManifestTransformer {
             let call = call_match.as_str();
             
             // Extract each quoted string (file name) from the call
-            let file_re = Regex::new(r#"['"]([^'"]+)['"]"#).ok()?;
             for file_cap in file_re.captures_iter(call) {
                 if let Some(file) = file_cap.get(1) {
                     let filename = file.as_str().to_string();
@@ -272,16 +280,7 @@ impl ManifestTransformer {
         }
     }
     
-    fn _get_decision_value(&self, decision_id: &str) -> Option<String> {
-        self._decisions
-            .iter()
-            .find(|d| d.decision_id == decision_id)
-            .map(|d| format!("option_{}", d.selected_index))
-    }
-}
 
-fn is_match_pattern(s: &str) -> bool {
-    s.contains("://") || s.starts_with('<') || s.starts_with('*')
 }
 
 #[cfg(test)]

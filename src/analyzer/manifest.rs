@@ -4,6 +4,7 @@ use crate::models::{
     Manifest, Incompatibility, Severity, IncompatibilityCategory, Location,
     WebAccessibleResources, ContentSecurityPolicy,
 };
+use crate::utils::helpers::is_match_pattern;
 
 pub fn analyze_manifest(manifest: &Manifest) -> Vec<Incompatibility> {
     let mut issues = Vec::new();
@@ -131,10 +132,6 @@ pub fn analyze_manifest(manifest: &Manifest) -> Vec<Incompatibility> {
     }
     
     issues
-}
-
-fn is_match_pattern(s: &str) -> bool {
-    s.contains("://") || s.starts_with('<') || s.starts_with('*')
 }
 
 #[cfg(test)]

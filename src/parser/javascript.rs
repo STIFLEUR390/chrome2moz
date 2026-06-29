@@ -1,10 +1,10 @@
 //! JavaScript parsing and analysis using regex patterns
 
 use crate::models::extension::ChromeApiCall;
-use crate::models::chrome_api_data::ChromeApiDataset;
+use crate::models::chrome_api_data::{ChromeApiDataset, ChromeApiInfo};
 use regex::Regex;
-use lazy_static::lazy_static;
 use anyhow::Result;
+use std::sync::OnceLock;
 
 pub const CHROME_ONLY_APIS: &[&str] = &[
     // Completely unsupported in Firefox
@@ -31,36 +31,50 @@ pub const CHROME_ONLY_APIS: &[&str] = &[
     "chrome.downloads.setShelfEnabled",
 ];
 
-lazy_static! {
-    /// Global Chrome API dataset loaded from embedded JSON
-    static ref CHROME_API_DATASET: ChromeApiDataset = ChromeApiDataset::load();
-    
-    // Regex to match chrome.* API calls
-    static ref CHROME_API_PATTERN: Regex = Regex::new(
+/// Global Chrome API dataset loaded from embedded JSON
+fn chrome_api_dataset() -> &'static ChromeApiDataset {
+    static DATASET: OnceLock<ChromeApiDataset> = OnceLock::new();
+    DATASET.get_or_init(ChromeApiDataset::load)
+}
+
+/// Regex to match chrome.* API calls
+fn chrome_api_pattern() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(
         r"chrome\.([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)\s*\("
-    ).unwrap();
-    
-    // Regex to match chrome.* property access
-    static ref CHROME_PROPERTY_PATTERN: Regex = Regex::new(
+    ).unwrap())
+}
+
+/// Regex to match chrome.* property access
+fn chrome_property_pattern() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(
         r"\bchrome\.([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)"
-    ).unwrap();
-    
-    // Regex to detect callback-style (function as last parameter)
-    static ref CALLBACK_PATTERN: Regex = Regex::new(
+    ).unwrap())
+}
+
+/// Regex to detect callback-style (function as last parameter)
+fn callback_pattern() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(
         r"chrome\.[^(]+\([^)]*,\s*(?:function\s*\(|(?:\w+\s*=>|\(\w+\)\s*=>))"
-    ).unwrap();
+    ).unwrap())
 }
 
 /// Analyze JavaScript code for Chrome API usage
 pub fn analyze_javascript(source: &str) -> Result<Vec<ChromeApiCall>> {
     let mut calls = Vec::new();
     
+    let api_re = chrome_api_pattern();
+    let prop_re = chrome_property_pattern();
+    let cb_re = callback_pattern();
+    
     // Find all chrome.* API calls
     for (line_num, line) in source.lines().enumerate() {
         // Check for API calls
-        for cap in CHROME_API_PATTERN.captures_iter(line) {
+        for cap in api_re.captures_iter(line) {
             let api_name = format!("chrome.{}", &cap[1]);
-            let is_callback = CALLBACK_PATTERN.is_match(line);
+            let is_callback = cb_re.is_match(line);
             let is_chrome_only = is_chrome_only_api(&api_name);
             
             calls.push(ChromeApiCall {
@@ -74,7 +88,7 @@ pub fn analyze_javascript(source: &str) -> Result<Vec<ChromeApiCall>> {
         }
         
         // Also check for property access (not just calls)
-        for cap in CHROME_PROPERTY_PATTERN.captures_iter(line) {
+        for cap in prop_re.captures_iter(line) {
             let api_name = format!("chrome.{}", &cap[1]);
             
             // Skip if we already found this as a call
@@ -96,7 +110,7 @@ pub fn analyze_javascript(source: &str) -> Result<Vec<ChromeApiCall>> {
 
 fn is_chrome_only_api(api_name: &str) -> bool {
     // Use the dynamic dataset first
-    if CHROME_API_DATASET.is_chrome_only(api_name) {
+    if chrome_api_dataset().is_chrome_only(api_name) {
         return true;
     }
     
@@ -105,8 +119,8 @@ fn is_chrome_only_api(api_name: &str) -> bool {
 }
 
 /// Get detailed information about a Chrome-only API
-pub fn get_chrome_api_info(api_name: &str) -> Option<&'static crate::models::chrome_api_data::ChromeApiInfo> {
-    CHROME_API_DATASET.get_info(api_name)
+pub fn get_chrome_api_info(api_name: &str) -> Option<&'static ChromeApiInfo> {
+    chrome_api_dataset().get_info(api_name)
 }
 
 pub struct JavaScriptAnalyzer;

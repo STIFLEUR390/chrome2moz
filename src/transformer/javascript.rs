@@ -9,7 +9,11 @@
 
 use crate::models::{ModifiedFile, FileChange, SelectedDecision};
 use anyhow::Result;
+use regex::Regex;
+#[cfg(test)]
 use std::path::PathBuf;
+use std::path::Path;
+use std::sync::OnceLock;
 
 /// Simple pass-through transformer (no AST parsing needed!)
 pub struct JavaScriptTransformer {
@@ -30,7 +34,7 @@ impl JavaScriptTransformer {
     }
     
     /// Pass-through with handler injection (simple string concatenation)
-    pub fn transform_with_handlers(&mut self, content: &str, _path: &PathBuf, handlers: &[String]) -> Result<ModifiedFile> {
+    pub fn transform_with_handlers(&mut self, content: &str, _path: &Path, handlers: &[String]) -> Result<ModifiedFile> {
         let original_content = content.to_string();
         
         // Simple string concatenation - prepend handlers
@@ -52,15 +56,35 @@ impl JavaScriptTransformer {
         ];
         
         Ok(ModifiedFile {
-            path: _path.clone(),
+            path: _path.to_path_buf(),
             original_content,
             new_content,
             changes,
         })
     }
     
+    /// Cached regex patterns compiled once
+    fn import_scripts_pattern() -> &'static Regex {
+        static RE: OnceLock<Regex> = OnceLock::new();
+        RE.get_or_init(|| Regex::new(r"(?m)^\s*importScripts\s*\([^)]*\)\s*;?\s*$").unwrap())
+    }
+    
+    fn uninstall_pattern() -> &'static Regex {
+        static RE: OnceLock<Regex> = OnceLock::new();
+        RE.get_or_init(|| Regex::new(
+            r"(\w+\.)?browser\.management\.uninstallSelf\(\)|(\w+\.)?management\.uninstallSelf\(\)"
+        ).unwrap())
+    }
+    
+    fn firefox_check_pattern() -> &'static Regex {
+        static RE: OnceLock<Regex> = OnceLock::new();
+        RE.get_or_init(|| Regex::new(
+            r"(\.get\(\)\.clipperType|clipperType)\s*!==\s*3"
+        ).unwrap())
+    }
+    
     /// Simple pass-through with importScripts() removal and Firefox self-uninstall fix
-    pub fn transform(&mut self, content: &str, path: &PathBuf) -> Result<ModifiedFile> {
+    pub fn transform(&mut self, content: &str, path: &Path) -> Result<ModifiedFile> {
         let original_content = content.to_string();
         let mut new_content = content.to_string();
         let mut changes = Vec::new();
@@ -69,9 +93,7 @@ impl JavaScriptTransformer {
         let is_background = path.to_string_lossy().contains("background");
         
         if is_background {
-            // Remove or comment out importScripts() calls
-            // These scripts are now loaded via manifest.background.scripts
-            let import_scripts_pattern = regex::Regex::new(r"(?m)^\s*importScripts\s*\([^)]*\)\s*;?\s*$").unwrap();
+            let import_scripts_pattern = Self::import_scripts_pattern();
             
             if import_scripts_pattern.is_match(&new_content) {
                 // Comment out the lines instead of removing (safer)
@@ -90,16 +112,8 @@ impl JavaScriptTransformer {
         }
         
         // Remove Firefox self-uninstall behavior
-        // The extension calls browser.management.uninstallSelf() when it detects Firefox
-        // This prevents the extension from working in Firefox
-        
-        // Pattern 1: Remove any call to .management.uninstallSelf()
-        let uninstall_pattern = regex::Regex::new(
-            r"(\w+\.)?browser\.management\.uninstallSelf\(\)|(\w+\.)?management\.uninstallSelf\(\)"
-        ).unwrap();
-        
+        let uninstall_pattern = Self::uninstall_pattern();
         if uninstall_pattern.is_match(&new_content) {
-            // Replace with void(0) to maintain code flow
             new_content = uninstall_pattern.replace_all(&new_content,
                 "/* DISABLED: browser.management.uninstallSelf() */ void(0)"
             ).to_string();
@@ -113,15 +127,8 @@ impl JavaScriptTransformer {
             });
         }
         
-        // Pattern 2: Also check for Firefox-specific conditionals that might disable functionality
-        // e.g., if (clipperType !== FirefoxExtension) { doSomething(); }
-        // We want to ensure Firefox gets the same behavior as Chrome
-        let firefox_check_pattern = regex::Regex::new(
-            r"(\.get\(\)\.clipperType|clipperType)\s*!==\s*3"
-        ).unwrap();
-        
+        let firefox_check_pattern = Self::firefox_check_pattern();
         if firefox_check_pattern.is_match(&new_content) {
-            // Log this but don't auto-fix - might break intended behavior
             changes.push(FileChange {
                 line_number: 0,
                 change_type: crate::models::ChangeType::Modification,
@@ -132,7 +139,7 @@ impl JavaScriptTransformer {
         }
         
         Ok(ModifiedFile {
-            path: path.clone(),
+            path: path.to_path_buf(),
             original_content,
             new_content,
             changes,

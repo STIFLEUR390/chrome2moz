@@ -1,6 +1,7 @@
 //! Conversion context and results
 
 use super::{Extension, Incompatibility, Manifest};
+use std::default::Default;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -113,6 +114,28 @@ pub struct ReportSummary {
     pub total_changes: usize,
     pub chrome_api_calls_converted: usize,
     pub callback_to_promise_conversions: usize,
+}
+
+impl Default for ConversionReport {
+    fn default() -> Self {
+        Self {
+            summary: ReportSummary {
+                extension_name: String::new(),
+                extension_version: String::new(),
+                conversion_successful: false,
+                files_modified: 0,
+                files_added: 0,
+                total_changes: 0,
+                chrome_api_calls_converted: 0,
+                callback_to_promise_conversions: 0,
+            },
+            manifest_changes: Vec::new(),
+            javascript_changes: Vec::new(),
+            blockers: Vec::new(),
+            manual_actions: Vec::new(),
+            warnings: Vec::new(),
+        }
+    }
 }
 
 impl ConversionContext {

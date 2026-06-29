@@ -20,6 +20,14 @@ pub fn load_extension(path: &Path) -> Result<Extension> {
 }
 
 /// Build Firefox extension package with all files
+fn derive_xpi_path(output_path: &Path) -> std::path::PathBuf {
+    let stem = output_path
+        .file_stem()
+        .map(|s| s.to_string_lossy().to_string())
+        .unwrap_or_else(|| "extension".to_string());
+    output_path.with_file_name(format!("{}.xpi", stem))
+}
+
 pub fn build_complete_extension(
     source: &Extension,
     result: &ConversionResult,
@@ -28,8 +36,8 @@ pub fn build_complete_extension(
     builder::build_complete_directory(source, result, output_path)?;
     
     // Create XPI from directory
-    let zip_path = output_path.with_extension("xpi");
-    builder::create_zip_from_directory(output_path, &zip_path)?;
+    let xpi_path = derive_xpi_path(output_path);
+    builder::create_zip_from_directory(output_path, &xpi_path)?;
     
     Ok(())
 }

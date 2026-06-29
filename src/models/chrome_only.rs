@@ -47,7 +47,7 @@ pub struct DocumentAnalysis {
     pub message_handlers: Vec<MessageHandler>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum OffscreenPurpose {
     CanvasRendering,        // Canvas 2D/WebGL operations
     AudioProcessing,        // Web Audio API
@@ -58,13 +58,8 @@ pub enum OffscreenPurpose {
     DataProcessing,        // Heavy computation
     CryptoOperations,      // Crypto libraries
     Mixed(Vec<Box<OffscreenPurpose>>),
+    #[default]
     Unknown,
-}
-
-impl Default for OffscreenPurpose {
-    fn default() -> Self {
-        Self::Unknown
-    }
 }
 
 impl OffscreenPurpose {

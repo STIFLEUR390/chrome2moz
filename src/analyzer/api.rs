@@ -2,9 +2,9 @@
 
 use crate::models::{Incompatibility, Severity, IncompatibilityCategory, Location};
 use crate::parser::javascript::{analyze_javascript, get_chrome_api_info};
-use std::path::PathBuf;
+use std::path::Path;
 
-pub fn analyze_javascript_apis(content: &str, path: &PathBuf) -> Vec<Incompatibility> {
+pub fn analyze_javascript_apis(content: &str, path: &Path) -> Vec<Incompatibility> {
     let mut issues = Vec::new();
     
     // Parse and analyze JavaScript
@@ -53,7 +53,7 @@ pub fn analyze_javascript_apis(content: &str, path: &PathBuf) -> Vec<Incompatibi
                         Incompatibility::new(
                             severity,
                             IncompatibilityCategory::ChromeOnlyApi,
-                            Location::FileLocation(path.clone(), call.line),
+                            Location::FileLocation(path.to_path_buf(), call.line),
                             description
                         )
                         .with_suggestion(&suggestion)
@@ -75,6 +75,7 @@ pub fn analyze_javascript_apis(content: &str, path: &PathBuf) -> Vec<Incompatibi
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::PathBuf;
     
     #[test]
     fn test_detect_chrome_only_api() {

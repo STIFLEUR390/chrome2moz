@@ -105,25 +105,3 @@ pub fn transform_extension(context: ConversionContext) -> Result<ConversionResul
         report,
     })
 }
-
-impl Default for crate::models::ConversionReport {
-    fn default() -> Self {
-        Self {
-            summary: crate::models::ReportSummary {
-                extension_name: String::new(),
-                extension_version: String::new(),
-                conversion_successful: false,
-                files_modified: 0,
-                files_added: 0,
-                total_changes: 0,
-                chrome_api_calls_converted: 0,
-                callback_to_promise_conversions: 0,
-            },
-            manifest_changes: Vec::new(),
-            javascript_changes: Vec::new(),
-            blockers: Vec::new(),
-            manual_actions: Vec::new(),
-            warnings: Vec::new(),
-        }
-    }
-}

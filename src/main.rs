@@ -93,7 +93,8 @@ fn main() {
                     println!("  - Output: {}", output.display());
                     
                     if report {
-                        let report_path = output.with_extension("md");
+                        let report_stem = output.file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_else(|| "conversion".to_string());
+                        let report_path = output.with_file_name(format!("{}_report.md", report_stem));
                         if let Ok(report_content) = chrome2moz::report::generate_report(&result) {
                             if std::fs::write(&report_path, report_content).is_ok() {
                                 println!("  - Report: {}", report_path.display());

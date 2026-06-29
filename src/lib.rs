@@ -95,8 +95,6 @@ pub enum TransformerBackend {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CalculatorType {
-    TiNspire,
-    Speedcrunch,
     Both,
 }
 
